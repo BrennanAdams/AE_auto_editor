@@ -23,29 +23,59 @@ if (activeComp && activeComp instanceof CompItem) {
       var markerProperty = audio_markers;
 
       if (markerProperty && markerProperty.numKeys > 0) {
-      var numMarkers = markerProperty.numKeys; // Get the number of markers
+        var numMarkers = markerProperty.numKeys; // Get the number of markers
 
-      for (var i = numMarkers; i >= 2; i--) {
-        cut_layer(markerProperty, selectedLayer);
+        for (var i = numMarkers; i >= 2; i--) {
+          cut_layer(markerProperty, selectedLayer);
+        }
+      } else {
+        alert("No markers found on the layer.");
+      }
     }
-  } else {
-    alert("No markers found on the layer.");
-  }
+    } else {
+      alert("No layer selected in the timeline.");
     }
-  } else {
-    alert("No layer selected in the timeline.");
-  }
-
-
-  // ______________________ SELECTING AND SEQUENCING PART ______________________
 
 
 
 
+    // ______________________ SELECTING AND SEQUENCING PART ______________________
+    //select all layers in the in out point
+    //go to each marker point
+    // select all layers in the in out point
+    //then select a layer to keep and the rest to delete
+    //loop again to next marker point
+    // Select all layers within the in/out points
+    // Loop through the markers in reverse order
 
 
-  
+    for (var i = numMarkers; i >= 2; i--) {
+      var markerTime = markerProperty.keyTime(i); // Get the marker time
+      var nextMarkerTime = markerProperty.keyTime(i - 1);
+      var duplicatedLayer = selectedLayer.duplicate();
 
+      // Set the in/out points of the selected and duplicated layers
+      selectedLayer.outPoint = markerTime;
+      duplicatedLayer.inPoint = nextMarkerTime;
+
+      duplicatedLayer.outPoint = markerTime;
+      duplicatedLayer.inPoint = nextMarkerTime;
+
+      // Select all layers within the in/out points
+      selectLayersInTimeRange(activeComp, nextMarkerTime, markerTime);
+
+      // Randomly select a layer to keep
+      var layersToKeep = activeComp.selectedLayers;
+
+      if (layersToKeep.length > 0) {
+        var keepIndex = Math.floor(Math.random() * layersToKeep.length);
+        for (var j = 0; j < layersToKeep.length; j++) {
+          if (j !== keepIndex) {
+            layersToKeep[j].remove();
+          }
+        }
+      }
+    }
 } else {
   alert("No composition open in Adobe After Effects.");
 }
@@ -84,4 +114,17 @@ function cut_layer(markerProperty, selectedLayer) {
   
   duplicatedLayer.outPoint = markerTime;
   duplicatedLayer.inPoint = nextMarkerTime;
+}
+
+
+
+function selectLayersInTimeRange(comp, inPoint, outPoint) {
+  for (var i = 1; i <= comp.numLayers; i++) {
+    var layer = comp.layer(i);
+    if (layer.inPoint >= inPoint && layer.outPoint <= outPoint) {
+      layer.selected = true;
+    } else {
+      layer.selected = false;
+    }
+  }
 }
